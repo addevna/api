@@ -1,9 +1,9 @@
 import { readdir } from 'fs/promises'
 import _ from 'lodash'
 import dotenv from 'dotenv'
-import { Service } from 'typedi'
+import { injectable } from 'inversify'
 
-@Service()
+@injectable()
 export class Config {
   private static instance: Config
   private configs:

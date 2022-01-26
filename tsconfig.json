@@ -3,6 +3,7 @@
     "target": "es5",
     "module": "commonjs",
     "lib": [ "es6", "es2015" ],
+    "types": ["reflect-metadata"],
     "allowJs": true,
     "outDir": "./dist",
     "rootDir": "./",
@@ -14,6 +15,9 @@
     "forceConsistentCasingInFileNames": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-//    "strictPropertyInitialization": false
+//    "paths": {
+//      "@app/*": ["./src/system/*"],
+//      "@domain/*": ["./src/domain/*"]
+//    }
   }
 }

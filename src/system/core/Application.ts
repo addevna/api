@@ -1,18 +1,16 @@
 import path from 'path'
 import { AbstractProvider } from '../providers/AbstractProvider'
 import { Config } from './Config'
-import { Container as ContainerTo } from 'typeorm-typedi-extensions'
-import { Container } from 'typedi'
 import { providers } from '../providers/registry'
-import {
-  createExpressServer,
-  useContainer as rcUseContainer,
-} from 'routing-controllers'
-import { useContainer as tpUseContainer } from 'typeorm'
 import express from 'express'
-
-rcUseContainer(Container)
-tpUseContainer(ContainerTo)
+import { container } from './IoC'
+import { glob } from 'glob'
+import {
+  IAddUserInputPort,
+  IAddUserInputPortType,
+} from '../../domain/usecases/contracts/inputport/IAddUserInputPort'
+import { InversifyExpressServer } from 'inversify-express-utils'
+import bodyParser from 'body-parser'
 
 export class Application {
   private static _application: Application
@@ -23,38 +21,25 @@ export class Application {
     'config'
   )
   private _httpDirectory: string = path.join(this._systemDirectoryPath, 'http')
-  private _controllerFiles: string = path.join(
-    this._httpDirectory,
-    '/controllers/**/*.ts'
-  )
   private _express?: express.Application
 
   static get application(): Application {
     return this._application
   }
-
   get providers(): AbstractProvider[] {
     return this._providers
   }
-
   get systemDirectoryPath(): string {
     return this._systemDirectoryPath
   }
-
   get configDirectoryPath(): string {
     return this._configDirectoryPath
   }
-
   get httpDirectory(): string {
     return this._httpDirectory
   }
 
-  get controllerFiles(): string {
-    return this._controllerFiles
-  }
-
   /**
-   *
    * @param basePath
    */
   public static async instance(basePath: string): Promise<Application> {
@@ -72,7 +57,6 @@ export class Application {
   }
 
   /**
-   *
    * @param basePath
    */
   constructor(private readonly basePath: string) {
@@ -80,18 +64,17 @@ export class Application {
   }
 
   /**
-   *
    * @private
    */
   private async init() {
     await this.loadConfig()
+    await this.loadControllers()
     await this.loadProviders()
     await this.providerRegister()
     await this.providerBoot()
   }
 
   /**
-   *
    * @private
    */
   private async loadProviders() {
@@ -101,37 +84,63 @@ export class Application {
   }
 
   /**
-   *
    * @private
    */
   private async loadConfig() {
     const config = await Config.loadFromPath(this._configDirectoryPath)
-    Container.set<Config>(Config, config)
+    container.bind<Config>(Config.name).toConstantValue(config)
   }
 
   /**
-   *
    * @private
    */
   private async providerRegister() {
-    this._providers.forEach((provider) => {
-      provider.register()
-    })
+    for (const provider of this._providers) {
+      await provider.register()
+    }
   }
 
   /**
-   *
    * @private
    */
   private async providerBoot() {
-    this._providers.forEach((provider) => {
-      provider.boot()
-    })
+    for (const provider of this._providers) {
+      await provider.boot()
+    }
   }
 
+  /**
+   * @private
+   */
+  private async loadControllers() {
+    const controllerPath = path.join(
+      this.basePath,
+      'system',
+      'http',
+      'controllers',
+      '**',
+      '*.ts'
+    )
+    for (const f of await glob.sync(controllerPath)) {
+      await import(f)
+    }
+  }
+
+  /**
+   * @param port
+   */
   public httpServer(port: number = 3000): void {
-    this._express = createExpressServer({
-      controllers: [this._controllerFiles],
-    }).listen(port)
+    const server = new InversifyExpressServer(container)
+    server
+      .setConfig((app) => {
+        app.use(
+          bodyParser.urlencoded({
+            extended: true,
+          })
+        )
+        app.use(bodyParser.json())
+      })
+      .build()
+      .listen(port)
   }
 }

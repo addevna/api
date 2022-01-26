@@ -1,6 +1,6 @@
-import { Application } from './system/core/Application'
 import 'reflect-metadata'
-
-Application.instance(__dirname).then((app) => {
+import { Application } from './system/core/Application'
+;(async () => {
+  const app = await Application.instance(__dirname)
   app.httpServer()
-})
+})()

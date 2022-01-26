@@ -1,11 +1,10 @@
-import { Container, Service } from 'typedi'
 import { createConnection } from 'typeorm'
 import { Config } from './Config'
+import { container } from './IoC'
 
-@Service('database')
 export class Database {
   constructor() {
-    const config = Container.get<Config>(Config)
+    const config = container.get<Config>(Config.name)
     createConnection({
       type: 'postgres',
       host: config.get('database.host'),
@@ -14,7 +13,8 @@ export class Database {
       database: config.get('database.database'),
       port: config.get('database.port'),
       synchronize: config.get('database.synchronize', false),
-      logging: config.get('database.logging', true),
+      logging: true, //config.get('database.logging', true),
+      entities: ['src/system/models/*.ts'],
     }).catch((error) => {
       console.log(error.message)
     })
