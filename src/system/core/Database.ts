@@ -12,7 +12,7 @@ export class Database {
       password: config.get('database.password'),
       database: config.get('database.database'),
       port: config.get('database.port'),
-      synchronize: config.get('database.synchronize', false),
+      synchronize: false,
       logging: true, //config.get('database.logging', true),
       entities: ['src/system/models/*.ts'],
     }).catch((error) => {

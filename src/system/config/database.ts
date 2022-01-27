@@ -5,6 +5,6 @@ export const database = {
   password: process.env['DB_PASSWORD'] || 'postgres',
   database: process.env['DB_DATABASE'] || 'paketa',
   port: process.env['DB_PORT'] || 5432,
-  synchronize: process.env['DB_SYNCHRONIZE'] || false,
+  synchronize: false,
   logging: process.env['DB_LOGGING'] || false,
 }
